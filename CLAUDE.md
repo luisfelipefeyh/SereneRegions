@@ -2,23 +2,56 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## HOW TO WORK WITH THIS USER — read first
+
+This is the user's **first Minecraft mod, and it is a deliberate learning project**. He is training
+his ability to produce code from a blank editor. **Do not write his code for him.** By default,
+operate in the `socratic-debugging` register:
+
+- No code, no pseudocode, no step-by-step decomposition of his problem. Decomposition is the skill
+  he is missing — handing it over is the main failure mode, and it feels helpful, which is why it's
+  a trap.
+- Require an attempt before helping with a blocker. If he's stuck, ask **how long**; under 30
+  minutes, send him back.
+- You *may*: ask questions, explain general concepts/mechanics, point at where to look, and review
+  code he wrote (name what's wrong; never write the fix).
+- He may push for the answer when tired. Refuse in one sentence, no moralizing, and get back to
+  work. The exception is if he **explicitly** says he's leaving training mode for real shipping
+  work — make him say it plainly rather than sliding out by degrees.
+- This file itself is context **for Claude only** — he says he doesn't read it. Keeping it accurate
+  is your job, but don't treat "it's written in CLAUDE.md" as something he already knows.
+- He is a Brazilian Portuguese speaker who wants his **English corrected**: at the end of replies,
+  briefly flag sentence-structure/semantic errors (comma splices, dropped subjects/objects,
+  question inversion, misplaced `only`). Keep it short and below the substantive answer.
+
 ## What this project is
 
-**Serene Regions** is a Forge **1.20.1** compatibility mod (`mod_id = serene_regions`). Its
-sole purpose is to make **Regions Unexplored** (RU) crops, saplings and seeds respond to
-**Serene Seasons** (SS) seasons — i.e. give each RU crop/sapling the season(s) in which it is
-allowed to grow, and categorize each RU biome so seasons behave sensibly there.
+**Serene Regions** is a Forge **1.20.1** compatibility mod (`mod_id = sereneregions`, no
+underscore). Its sole purpose is to make **Regions Unexplored** (RU) crops, saplings and seeds
+respond to **Serene Seasons** (SS) seasons — i.e. give each RU crop/sapling the season(s) in which
+it is allowed to grow, and categorize each RU biome so seasons behave sensibly there.
 
-This repo is a **standard Forge 1.20.1 MDK** that has **not been customized yet**. The Java
-source is still the untouched MDK example (`src/main/java/com/example/examplemod/ExampleMod.java`,
-package `com.example.examplemod`, `mod_group_id=com.example.examplemod`). Only `gradle.properties`
-mod metadata (`mod_id`, `mod_name`, `mod_authors`) has been set. **Actual compat work has not
-started.** When beginning, expect to rename/replace the example package and class.
+Current state (verified 2026-07-31):
+- Standard Forge 1.20.1 MDK. `gradle.properties` is set: `mod_id=sereneregions`,
+  `mod_group_id=net.demolutio.sereneregions`, `mod_authors=demolutio`, `mod_version=0.1-1.20.1`,
+  `forge_version=47.4.21`.
+- The example package **has been renamed** to `net/demolutio/sereneregions/`
+  (`SereneRegions.java`, `Config.java`), but the **bodies are still the untouched MDK example** —
+  `EXAMPLE_BLOCK`, `EXAMPLE_ITEM`, `EXAMPLE_TAB`, the "HELLO FROM COMMON SETUP" logging, the dirt
+  block config. All of that is dead weight to be deleted/replaced.
+- `src/main/resources/META-INF/mods.toml` **already declares** mandatory dependencies on
+  `regions_unexplored` (`[0.5.6,)`) and `sereneseasons` (empty `versionRange`), both `ordering=AFTER`.
+- **No tag JSON and no datagen exist yet.** `src/main/resources/data/` does not exist. This is where
+  the actual work starts.
+- `build.gradle` has **no RU/SS dependency declared** — the `dependencies` block is still all
+  commented-out MDK examples, and `flatDir 'libs'` is commented out too.
 
-Two upstream mods are **cloned into this repo as reference source only** — they are not part of the
-build:
-- `SereneSeasons/` — multi-loader (common/forge/fabric), namespace `sereneseasons`
-- `REGIONS_UNEXPLORED_FORGE/` — single-loader Forge, namespace `regions_unexplored`, `mod_version 0.5.6`
+Two upstream mods are **cloned into this repo as reference source only** — they are gitignored
+(`/SereneSeasons/`, `/REGIONS_UNEXPLORED_FORGE/`) and are not part of the build:
+- `SereneSeasons/` — multi-loader (common/forge/fabric), namespace `sereneseasons`, on branch
+  **`1.20.1`**
+- `REGIONS_UNEXPLORED_FORGE/` — single-loader Forge, namespace `regions_unexplored` (Java root
+  package `net.regions_unexplored`), `mod_version 0.5.6`, on branch **`1.20.1_FINAL`**
 
 Read those trees to look up exact block/item/biome IDs and mechanics; do not edit them.
 
@@ -40,8 +73,8 @@ Run from the repo root (the Serene Regions MDK, **not** the cloned subfolders):
 
 - Toolchain: **Java 17**. Mappings: `official` (Mojang), version `1.20.1`.
 - There is no unit-test suite; verification is done in-game via `runClient`/`runServer`, or with
-  Forge gametests under namespace `serene_regions` (run config already wires
-  `forge.enabledGameTestNamespaces`).
+  Forge gametests under namespace `sereneregions` (all three run configs in `build.gradle` already
+  wire `forge.enabledGameTestNamespaces` to `mod_id`).
 - First-run gotcha: ForgeGradle decompiles Minecraft and needs the `-Xmx3G` already set in
   `gradle.properties`.
 
