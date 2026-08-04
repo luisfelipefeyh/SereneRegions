@@ -43,8 +43,7 @@ Current state (verified 2026-07-31):
   `regions_unexplored` (`[0.5.6,)`) and `sereneseasons` (empty `versionRange`), both `ordering=AFTER`.
 - **No tag JSON and no datagen exist yet.** `src/main/resources/data/` does not exist. This is where
   the actual work starts.
-- `build.gradle` has **no RU/SS dependency declared** — the `dependencies` block is still all
-  commented-out MDK examples, and `flatDir 'libs'` is commented out too.
+- `build.gradle` **now declares the dev-environment mods** (see "Dev environment" below).
 
 Two upstream mods are **cloned into this repo as reference source only** — they are gitignored
 (`/SereneSeasons/`, `/REGIONS_UNEXPLORED_FORGE/`) and are not part of the build:
@@ -78,14 +77,39 @@ Run from the repo root (the Serene Regions MDK, **not** the cloned subfolders):
 - First-run gotcha: ForgeGradle decompiles Minecraft and needs the `-Xmx3G` already set in
   `gradle.properties`.
 
-### Making RU + SS available in the dev environment
+### Dev environment: RU + SS at runtime (SOLVED — do not re-litigate)
 
-Nothing in `build.gradle`'s `dependencies` block references RU or SS yet. Adding the tags alone is
-enough to *build* the jar, but to **test** in-game the two mods must be present at runtime so their
-block/item/biome IDs resolve. Either build jars from the cloned repos, or (simpler) drop RU + SS +
-their deps (SS needs GlitchCore; RU needs TerraBlender) into a `./libs` flat-dir repo and declare
-them with `fg.deobf(...)` / `runtimeOnly`. Decide this before writing any Java that imports SS/RU
-classes.
+`runClient` boots with all four mods loaded as of 2026-08-04. The setup, and *why* each piece is
+there, because every part of it was hard-won:
+
+- `repositories { maven { url "https://cursemaven.com" } }` — CurseMaven is a community Maven façade
+  over CurseForge. Coordinates are `curse.maven:<slug>-<projectId>:<fileId>`. TODO (flagged, not
+  done): restrict it with `content { includeGroup "curse.maven" }` so Gradle stops asking cursemaven
+  about every unresolved artifact.
+- Four `runtimeOnly fg.deobf(...)` deps: `sereneseasons-291874:8246702`,
+  `regionsunexplored-659110:5558225`, `terrablender-563928:6290448`, `glitchcore-955399:5787839`.
+  **`runtimeOnly`, not `implementation`** — the mod is data-only and compiles against neither.
+  SS needs GlitchCore, RU needs TerraBlender; CurseMaven serves no usable POM, so transitive
+  resolution does **not** happen — every dependency-of-a-dependency must be declared by hand.
+- `id 'org.spongepowered.mixin' version '0.7.+'` in `plugins` — **required**, and non-obvious.
+  Without it, GlitchCore's mixins fail at boot with `InvalidInjectionException: could not find any
+  targets matching 'Lnet/minecraft/client/gui/GuiGraphics;m_280497_(...)'`. Cause: published mod
+  jars carry an SRG-named refmap; `fg.deobf` remaps their *bytecode* into the dev mappings but
+  leaves the *refmap* untouched, so Mixin looks up SRG names in a named-mapping runtime. MixinGradle
+  fixes it by injecting `mixin.env.remapRefMap=true` and `mixin.env.refMapRemappingFile=<output of
+  createSrgToMcp>` into the run configs. This bites *any* mixin-bearing mod pulled from CurseMaven.
+- `annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'` was added in the same change but
+  is almost certainly inert (it generates refmaps for the project's *own* mixins, of which there are
+  none). User was asked to test removing it — outcome unknown.
+
+### `mods.toml` version ranges — the `""` footgun
+
+`versionRange = ""` matches **nothing**, despite the Forge docs claiming "an empty string matches any
+version". Verified against `maven-artifact-3.9.1`: `VersionRange.createFromVersionSpec("")` yields
+zero restrictions, and `containsVersion(...)` iterates restrictions and returns `false` by default.
+`IModInfo.UNBOUNDED` — FML's fallback when the field is *omitted* — is defined as
+`createFromVersionSpec("")`, so omitting it is equally broken. The check lives in
+`ModSorter#verifyDependencyVersions`. Current values: RU `[0.5.6,)`, SS `[9.1,)`.
 
 ## How the compat actually works (the important architecture)
 
