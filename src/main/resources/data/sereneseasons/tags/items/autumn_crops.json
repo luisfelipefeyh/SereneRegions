@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "regions_unexplored:blackwood_sapling",
+    "regions_unexplored:cypress_sapling",
+    "regions_unexplored:eucalyptus_sapling",
+    "regions_unexplored:golden_larch_sapling",
+    "regions_unexplored:larch_sapling",
+    "regions_unexplored:maple_sapling",
+    "regions_unexplored:orange_maple_sapling",
+    "regions_unexplored:redwood_sapling",
+    "regions_unexplored:silver_birch_sapling",
+    "regions_unexplored:willow_sapling"
+  ]
+}

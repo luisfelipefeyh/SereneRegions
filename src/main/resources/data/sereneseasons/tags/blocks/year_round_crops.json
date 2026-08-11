@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "regions_unexplored:alpha_sapling",
+    "regions_unexplored:apple_oak_sapling",
+    "regions_unexplored:dead_sapling",
+    "regions_unexplored:flowering_sapling",
+    "regions_unexplored:small_oak_sapling"
+  ]
+}

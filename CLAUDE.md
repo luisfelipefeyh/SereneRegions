@@ -31,19 +31,65 @@ underscore). Its sole purpose is to make **Regions Unexplored** (RU) crops, sapl
 respond to **Serene Seasons** (SS) seasons — i.e. give each RU crop/sapling the season(s) in which
 it is allowed to grow, and categorize each RU biome so seasons behave sensibly there.
 
-Current state (verified 2026-07-31):
+Current state (verified 2026-08-11):
 - Standard Forge 1.20.1 MDK. `gradle.properties` is set: `mod_id=sereneregions`,
   `mod_group_id=net.demolutio.sereneregions`, `mod_authors=demolutio`, `mod_version=0.1-1.20.1`,
   `forge_version=47.4.21`.
+- **The crop/sapling tags are written and verified working in-game** (2026-08-11): tags load,
+  tooltips render, growth gating applies. 11 hand-written files under
+  `src/main/resources/data/sereneseasons/tags/` — `blocks/{spring,summer,autumn,winter,year_round,
+  unbreakable_infertile}_crops.json` and `items/{spring,summer,autumn,winter,year_round}_crops.json`.
+  All 33 non-potted RU saplings plus `duskmelon` and `salmonberry_bush` are covered; every ID was
+  diffed against RU's registrations and is valid. `pack.mcmeta` is `pack_format 15`.
+- **Biome tags are NOT written yet** — `data/sereneseasons/tags/worldgen/biome/` does not exist.
+  This is the remaining scope. See "The tags Serene Regions must produce" below.
 - The example package **has been renamed** to `net/demolutio/sereneregions/`
-  (`SereneRegions.java`, `Config.java`), but the **bodies are still the untouched MDK example** —
-  `EXAMPLE_BLOCK`, `EXAMPLE_ITEM`, `EXAMPLE_TAB`, the "HELLO FROM COMMON SETUP" logging, the dirt
-  block config. All of that is dead weight to be deleted/replaced.
+  (`SereneRegions.java`, `Config.java`). `SereneRegions.java` was slimmed (registries, example
+  block/item/tab deleted) but the **remaining bodies are still MDK example** — "HELLO FROM COMMON
+  SETUP", the dirt-block config read, `onServerStarting`, `ClientModEvents`, and the
+  `context.registerConfig(..., Config.SPEC)` line that keeps `Config.java` alive. The mod is
+  data-only and needs none of it.
 - `src/main/resources/META-INF/mods.toml` **already declares** mandatory dependencies on
-  `regions_unexplored` (`[0.5.6,)`) and `sereneseasons` (empty `versionRange`), both `ordering=AFTER`.
-- **No tag JSON and no datagen exist yet.** `src/main/resources/data/` does not exist. This is where
-  the actual work starts.
+  `regions_unexplored` (`[0.5.6,)`) and `sereneseasons` (`[9.1,)`), both `ordering=AFTER`.
 - `build.gradle` **now declares the dev-environment mods** (see "Dev environment" below).
+
+### Tag design decisions already made (do not re-litigate)
+
+- **Hand-written JSON now, datagen refactor later** as a deliberate two-phase plan. Phase 2 keeps
+  the hand-written files around so the generated output can be `diff`ed against them as a
+  correctness oracle. Datagen phase 2 **will** require a compile dependency on RU (`implementation
+  fg.deobf`, replacing `runtimeOnly`) — that is the entire point of doing it, since the benefit is
+  compile-time symbol resolution, not scale.
+- **Design philosophy: match SS's vanilla precedent.** Single-season tags are within precedent
+  (SS gives vanilla `jungle_sapling`/`acacia_sapling` summer-only, `cherry_sapling` spring-only,
+  `dark_oak_sapling` autumn-only).
+- Untagged blocks are already fertile spring/summer/autumn, so tags only ever *restrict*; the tag
+  files are the **exceptions**, not an exhaustive list.
+- Nether trees (`brimwood`, `cobalt`) are deliberately tagged summer — seasons don't run in the
+  Nether, so this only governs a sapling carried to the overworld.
+- `duskmelon` is deliberately **winter-only** ("creature of the cold"). Note `ModFertility` line 72
+  makes everything below y=48 without sky access unconditionally fertile, so the tag only governs
+  surface farming.
+- Item-tag entries are `salmonberry` and `duskmelon_slice`, not the block names — both are
+  `FoodItemWithBlock`, i.e. the plantable item. Item tags drive **only** the "fertile in: …"
+  tooltip, never growth.
+
+### The tag-reference footgun that cost a debugging session (2026-08-11)
+
+An unresolvable `#namespace:tag` reference **destroys the entire tag**, not just that entry. All
+eight season files briefly contained `#regions_unexplored:year_round_crops`, a tag RU does not
+define. Result: `sereneseasons:{spring,summer,autumn,winter}_crops` all failed to load *completely*,
+taking SS's own vanilla entries with them. `ModFertility.populate()` then built empty sets, so
+`ModFertility.isCrop(state)` returned false for **every block in the game** — no growth gating
+anywhere, no tooltips anywhere. It presents as "Serene Seasons is fundamentally broken."
+
+The evidence was an `ERROR`-level line from `net.minecraft.tags.TagLoader` in the run log the whole
+time: `Couldn't load tag sereneseasons:summer_crops as it is missing following references: ...`.
+
+Two takeaways: **(a)** season files should NOT re-declare `#sereneseasons:year_round_crops` — SS's
+own files already contribute it to the merged tag; **(b)** `{"id": "...", "required": false}` is
+what converts a fatal reference into a skipped entry, which is a separate question from whether the
+mod dependency is hard.
 
 Two upstream mods are **cloned into this repo as reference source only** — they are gitignored
 (`/SereneSeasons/`, `/REGIONS_UNEXPLORED_FORGE/`) and are not part of the build:

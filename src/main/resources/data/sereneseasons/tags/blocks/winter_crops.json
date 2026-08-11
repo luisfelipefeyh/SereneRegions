@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "regions_unexplored:dead_pine_sapling",
+    "regions_unexplored:duskmelon",
+    "regions_unexplored:golden_larch_sapling",
+    "regions_unexplored:larch_sapling",
+    "regions_unexplored:pine_sapling",
+    "regions_unexplored:red_maple_sapling",
+    "regions_unexplored:salmonberry_bush"
+  ]
+}
