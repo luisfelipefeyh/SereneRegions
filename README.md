@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/main/resources/image.png" alt="Serene Regions" width="400">
+</p>
+
 # Serene Regions
 
 **Compatibility between [Serene Seasons](https://www.curseforge.com/minecraft/mc-mods/serene-seasons) and [Regions Unexplored](https://www.curseforge.com/minecraft/mc-mods/regions-unexplored).**
@@ -37,4 +41,4 @@ This is my first mod. That's why at least for now it's only for Forge 1.20.1, as
 
 Built by **demolutio**, artwork by **luisaava**.
 
-All credit for the seasons and the biomes themselves goes to the [Serene Seasons](https://github.com/Glitchfiend/SereneSeasons) and [Regions Unexplored](https://github.com/Uncandango/RegionsUnexplored) teams.
+All credit for the seasons and the biomes themselves goes to the [Serene Seasons](https://github.com/Glitchfiend/SereneSeasons) and [Regions Unexplored](https://github.com/UHQ-GAMES-MODS/RegionsUnexplored) teams.
