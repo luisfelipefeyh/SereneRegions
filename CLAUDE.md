@@ -31,27 +31,50 @@ underscore). Its sole purpose is to make **Regions Unexplored** (RU) crops, sapl
 respond to **Serene Seasons** (SS) seasons — i.e. give each RU crop/sapling the season(s) in which
 it is allowed to grow, and categorize each RU biome so seasons behave sensibly there.
 
-Current state (verified 2026-08-11):
-- Standard Forge 1.20.1 MDK. `gradle.properties` is set: `mod_id=sereneregions`,
-  `mod_group_id=net.demolutio.sereneregions`, `mod_authors=demolutio`, `mod_version=0.1-1.20.1`,
-  `forge_version=47.4.21`.
-- **The crop/sapling tags are written and verified working in-game** (2026-08-11): tags load,
-  tooltips render, growth gating applies. 11 hand-written files under
-  `src/main/resources/data/sereneseasons/tags/` — `blocks/{spring,summer,autumn,winter,year_round,
-  unbreakable_infertile}_crops.json` and `items/{spring,summer,autumn,winter,year_round}_crops.json`.
-  All 33 non-potted RU saplings plus `duskmelon` and `salmonberry_bush` are covered; every ID was
-  diffed against RU's registrations and is valid. `pack.mcmeta` is `pack_format 15`.
-- **Biome tags are NOT written yet** — `data/sereneseasons/tags/worldgen/biome/` does not exist.
-  This is the remaining scope. See "The tags Serene Regions must produce" below.
-- The example package **has been renamed** to `net/demolutio/sereneregions/`
-  (`SereneRegions.java`, `Config.java`). `SereneRegions.java` was slimmed (registries, example
-  block/item/tab deleted) but the **remaining bodies are still MDK example** — "HELLO FROM COMMON
-  SETUP", the dirt-block config read, `onServerStarting`, `ClientModEvents`, and the
-  `context.registerConfig(..., Config.SPEC)` line that keeps `Config.java` alive. The mod is
-  data-only and needs none of it.
-- `src/main/resources/META-INF/mods.toml` **already declares** mandatory dependencies on
-  `regions_unexplored` (`[0.5.6,)`) and `sereneseasons` (`[9.1,)`), both `ordering=AFTER`.
-- `build.gradle` **now declares the dev-environment mods** (see "Dev environment" below).
+Current state (verified 2026-08-15): **feature-complete and release-ready.** `./gradlew build`
+produces a clean 12 KB `sereneregions-1.0-1.20.1.jar`; git is clean and pushed to
+`git@github.com:luisfelipefeyh/SereneRegions.git` (branch `master`).
+
+- **All 13 tag files are written and verified in-game.** Under
+  `src/main/resources/data/sereneseasons/tags/`:
+  `blocks/{spring,summer,autumn,winter,year_round,unbreakable_infertile}_crops.json`,
+  `items/{spring,summer,autumn,winter,year_round}_crops.json`, and
+  `worldgen/biome/{tropical,blacklisted}_biomes.json`. All 33 non-potted RU saplings plus
+  `duskmelon` and `salmonberry_bush`; every ID diffed against RU's registrations. Tropical is 12
+  biomes (bayou and old_growth_bayou were deliberately removed — SS leaves vanilla `swamp` out of
+  tropical too); blacklisted is 7 fully-underground biomes.
+- **`lesser_color_change_biomes` is declined, not pending.** User decided against it. Do not
+  re-propose.
+- **The MDK example Java is gone.** `SereneRegions.java` is ~30 lines: `@Mod` class, `MOD_ID`,
+  `LOGGER`, and one `FMLLoadCompleteEvent` listener logging "Serene Regions is loaded!".
+  `Config.java` was deleted along with `registerConfig`. Note the listener is registered on the
+  **mod event bus** via `modEventBus.addListener(this::...)` — subscribing lifecycle events on
+  `MinecraftForge.EVENT_BUS` fails silently, which cost a debugging round.
+- **`mods.toml` is finished**: `license="MIT"`, `logoFile="image.png"`, `logoBlur=false`,
+  `displayTest="IGNORE_SERVER_VERSION"`, dependencies on `regions_unexplored` `[0.5.6,)` and
+  `sereneseasons` `[9.1,)` both `ordering=AFTER`, `side="BOTH"`. No `issueTrackerURL` (optional,
+  still absent).
+- **`displayTest="IGNORE_SERVER_VERSION"` is correct and verified** — the MDK's own comment block
+  documents it as the server-only-mod value. (I initially got this backwards; the docs settle it.)
+  Verified empirically: a client without the jar joins a server with it, and tooltips/fertility/
+  tropical biomes all work, because tags are synced server→client. Note `displayTest` does **not**
+  control which side the mod loads on, and singleplayer still needs the jar locally.
+- **`build.gradle` slimmed to 95 lines**: `publishing`/`maven-publish`, the manifest attributes
+  block, and the mixin `annotationProcessor` were all removed. The `tasks.named('jar')` wrapper was
+  kept for `finalizedBy 'reobfJar'`. `runs { }` keeps `client`, `server`, `data`; `gameTestServer`
+  and the `forge.enabledGameTestNamespaces` properties were removed.
+- `gradle.properties`: `mod_version=1.0-1.20.1`, `mod_license=MIT`,
+  `mod_authors=demolutio, luisaava`, `mapping_channel=parchment`
+  (`2023.09.03-1.20.1` — dev-time only, `reobfJar` means it does not affect the shipped jar).
+- Root is clean: `README.md` (written this session, user-edited), `LICENSE.txt` (MIT),
+  `build.gradle`, `gradle.properties`, `CLAUDE.md`. `README.txt`, `CREDITS.txt` and `changelog.txt`
+  are deleted.
+- `src/main/resources/image.png` is Luisa's logo (776×526, **not square** despite being described
+  as such — a separate square export is still needed for Modrinth/CurseForge project icons).
+
+Not yet done: an in-game look at the logo in the Mods screen; a real-instance smoke test of *this*
+jar (an earlier build was verified on a Modrinth instance); the GitHub release tag and the
+Modrinth/CurseForge uploads.
 
 ### Tag design decisions already made (do not re-litigate)
 
