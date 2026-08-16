@@ -20,6 +20,7 @@ build
 # other
 eclipse
 run
+CLAUDE.md
 
 # Files from Forge MDK
 forge*changelog.txt

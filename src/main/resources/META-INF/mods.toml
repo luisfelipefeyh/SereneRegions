@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
+issueTrackerURL = "https://github.com/luisfelipefeyh/SereneRegions/issues"
 
 [[mods]]
 modId="${mod_id}"
@@ -11,6 +12,8 @@ displayTest="IGNORE_SERVER_VERSION"
 displayName="${mod_name}"
 authors="${mod_authors}"
 description='''${mod_description}'''
+displayURL = "https://github.com/luisfelipefeyh/SereneRegions"
+credits = "Thanks Luisa for the artwork!"
 
 [[dependencies.${mod_id}]]
     modId="forge"
